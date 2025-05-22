@@ -69,7 +69,7 @@ $main_categories = $category_model->getTopLevelCategories(8);
             <?php foreach ($featured_products as $product): ?>
             <div class="product-card">
                 <div class="product-card-image">
-                    <img src="<?php echo $product['image_url_main'] ?: '/api/placeholder/300/300'; ?>"
+                    <img src="<?php echo $product['image_url_main'] ?: SITE_URL . '/api/placeholder.php?w=300&h=300'; ?>"
                          alt="<?php echo htmlspecialchars($product['name']); ?>">
                     <?php if ($product['old_price'] && $product['old_price'] > $product['price']): ?>
                         <span class="product-badge sale">Скидка</span>
@@ -135,7 +135,7 @@ $main_categories = $category_model->getTopLevelCategories(8);
             <?php foreach ($new_products as $product): ?>
             <div class="product-card">
                 <div class="product-card-image">
-                    <img src="<?php echo $product['image_url_main'] ?: '/api/placeholder/300/300'; ?>"
+                    <img src="<?php echo $product['image_url_main'] ?: SITE_URL . '/api/placeholder.php?w=300&h=300'; ?>"
                          alt="<?php echo htmlspecialchars($product['name']); ?>">
                     <span class="product-badge new">Новинка</span>
                 </div>
@@ -241,7 +241,7 @@ $main_categories = $category_model->getTopLevelCategories(8);
             <?php foreach ($popular_products as $product): ?>
             <div class="product-card">
                 <div class="product-card-image">
-                    <img src="<?php echo $product['image_url_main'] ?: '/api/placeholder/300/300'; ?>"
+                    <img src="<?php echo $product['image_url_main'] ?: SITE_URL . '/api/placeholder.php?w=300&h=300'; ?>"
                          alt="<?php echo htmlspecialchars($product['name']); ?>">
                     <?php if ($product['old_price'] && $product['old_price'] > $product['price']): ?>
                         <span class="product-badge sale">Скидка</span>

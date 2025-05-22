@@ -74,7 +74,7 @@ class CartManager {
         button.disabled = true;
 
         try {
-            const response = await fetch('/autoparts/api/cart.php', {
+            const response = await fetch(window.location.origin + '/api/cart.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
@@ -126,7 +126,7 @@ class CartManager {
         }
 
         try {
-            const response = await fetch('/autoparts/api/cart.php', {
+            const response = await fetch(window.location.origin + '/api/cart.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
@@ -187,7 +187,7 @@ class CartManager {
         button.disabled = true;
 
         try {
-            const response = await fetch('/autoparts/api/cart.php', {
+            const response = await fetch(window.location.origin + '/api/cart.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
@@ -229,7 +229,7 @@ class CartManager {
 
     async clearCart() {
         try {
-            const response = await fetch('/autoparts/api/cart.php', {
+            const response = await fetch(window.location.origin + '/api/cart.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
@@ -311,7 +311,7 @@ class CartManager {
 
     async updateCartDisplay() {
         try {
-            const response = await fetch('/autoparts/api/cart.php?action=get_cart_data');
+            const response = await fetch(window.location.origin + '/api/cart.php?action=get_cart_data');
             const data = await response.json();
 
             if (data.success) {

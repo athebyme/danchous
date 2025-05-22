@@ -7,7 +7,8 @@ require_once __DIR__ . '/../includes/header.php';
 // Получаем модели
 $product_model = new Product(get_db_connection());
 $category_model = new Category(get_db_connection());
-$brand_model = new Brand(get_db_connection());
+// Временно отключаем бренды до создания класса
+// $brand_model = new Brand(get_db_connection());
 
 // Получаем параметры фильтрации
 $filters = [
@@ -32,14 +33,16 @@ if ($filters['category']) {
     }
 }
 
-// Получаем ID бренда по slug
+// Получаем ID бренда по slug (временно отключено)
 $current_brand = null;
+/*
 if ($filters['brand']) {
     $current_brand = $brand_model->getBySlug($filters['brand']);
     if ($current_brand) {
         $filters['brand_id'] = $current_brand['id'];
     }
 }
+*/
 
 // Получаем товары и общее количество
 $products = $product_model->getList($filters);
@@ -48,7 +51,7 @@ $total_pages = ceil($total_products / $filters['limit']);
 
 // Получаем данные для фильтров
 $categories = $category_model->getTopLevelCategories();
-$brands = $brand_model->getAll();
+$brands = []; // Временно пустой массив брендов
 $price_range = $product_model->getPriceRange();
 
 // Хлебные крошки

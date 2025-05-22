@@ -111,7 +111,7 @@ function showSearchSuggestions(results, inputElement) {
 
     results.forEach(item => {
         const suggestionItem = document.createElement('a');
-        suggestionItem.href = `/autoparts/pages/product.php?slug=${item.slug}`;
+        suggestionItem.href = `${window.location.origin}/pages/product.php?slug=${item.slug}`;
         suggestionItem.className = 'search-suggestion-item';
         suggestionItem.style.cssText = `
             display: flex;
