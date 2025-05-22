@@ -112,8 +112,8 @@ class Product {
         }
 
         // Пагинация
-        $limit = $filters['limit'] ?? 12;
-        $page = max(1, $filters['page'] ?? 1); // Убеждаемся что page минимум 1
+        $limit = (int)($filters['limit'] ?? 12);
+        $page = max(1, (int)($filters['page'] ?? 1)); // Убеждаемся что page минимум 1
         $offset = ($page - 1) * $limit;
 
         $sql = "SELECT p.*, c.name as category_name, c.slug as category_slug,
@@ -123,10 +123,20 @@ class Product {
                 LEFT JOIN brands b ON p.brand_id = b.id
                 WHERE {$where_clause}
                 ORDER BY {$order_by}
-                LIMIT {$limit} OFFSET {$offset}";
+                LIMIT :limit OFFSET :offset";
 
         $stmt = $this->pdo->prepare($sql);
-        $stmt->execute($params);
+
+        // Привязываем параметры WHERE
+        foreach ($params as $index => $param) {
+            $stmt->bindValue($index + 1, $param);
+        }
+
+        // Привязываем LIMIT и OFFSET как целые числа
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+
+        $stmt->execute();
         return $stmt->fetchAll();
     }
 
