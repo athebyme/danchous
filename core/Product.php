@@ -42,103 +42,105 @@ class Product {
      * Получение списка товаров с фильтрацией
      */
     public function getList($filters = []) {
-        $where_conditions = ['p.is_active = 1'];
-        $params = [];
+            $where_conditions = ['p.is_active = 1'];
+            $params_for_where = []; // Параметры для WHERE части запроса
 
-        // Фильтр по категории
-        if (!empty($filters['category_id'])) {
-            $where_conditions[] = 'p.category_id = ?';
-            $params[] = $filters['category_id'];
-        }
-
-        // Фильтр по бренду
-        if (!empty($filters['brand_id'])) {
-            $where_conditions[] = 'p.brand_id = ?';
-            $params[] = $filters['brand_id'];
-        }
-
-        // Поиск по названию
-        if (!empty($filters['search'])) {
-            $where_conditions[] = '(p.name LIKE ? OR p.description LIKE ? OR p.sku LIKE ?)';
-            $search_term = '%' . $filters['search'] . '%';
-            $params[] = $search_term;
-            $params[] = $search_term;
-            $params[] = $search_term;
-        }
-
-        // Фильтр по цене
-        if (!empty($filters['price_min'])) {
-            $where_conditions[] = 'p.price >= ?';
-            $params[] = $filters['price_min'];
-        }
-
-        if (!empty($filters['price_max'])) {
-            $where_conditions[] = 'p.price <= ?';
-            $params[] = $filters['price_max'];
-        }
-
-        // Только товары в наличии
-        if (!empty($filters['in_stock'])) {
-            $where_conditions[] = 'p.stock_quantity > 0';
-        }
-
-        // Рекомендуемые товары
-        if (!empty($filters['featured'])) {
-            $where_conditions[] = 'p.is_featured = 1';
-        }
-
-        $where_clause = implode(' AND ', $where_conditions);
-
-        // Сортировка
-        $order_by = 'p.created_at DESC';
-        if (!empty($filters['sort'])) {
-            switch ($filters['sort']) {
-                case 'price_asc':
-                    $order_by = 'p.price ASC';
-                    break;
-                case 'price_desc':
-                    $order_by = 'p.price DESC';
-                    break;
-                case 'name_asc':
-                    $order_by = 'p.name ASC';
-                    break;
-                case 'name_desc':
-                    $order_by = 'p.name DESC';
-                    break;
-                case 'popular':
-                    $order_by = 'p.views_count DESC';
-                    break;
+            // Фильтр по категории
+            if (!empty($filters['category_id'])) {
+                $where_conditions[] = 'p.category_id = ?';
+                $params_for_where[] = $filters['category_id'];
             }
+
+            // Фильтр по бренду
+            if (!empty($filters['brand_id'])) {
+                $where_conditions[] = 'p.brand_id = ?';
+                $params_for_where[] = $filters['brand_id'];
+            }
+
+            // Поиск по названию
+            if (!empty($filters['search'])) {
+                $where_conditions[] = '(p.name LIKE ? OR p.description LIKE ? OR p.sku LIKE ?)';
+                $search_term = '%' . $filters['search'] . '%';
+                $params_for_where[] = $search_term;
+                $params_for_where[] = $search_term;
+                $params_for_where[] = $search_term;
+            }
+
+            // Фильтр по цене
+            if (!empty($filters['price_min'])) {
+                $where_conditions[] = 'p.price >= ?';
+                $params_for_where[] = $filters['price_min'];
+            }
+            if (!empty($filters['price_max'])) {
+                $where_conditions[] = 'p.price <= ?';
+                $params_for_where[] = $filters['price_max'];
+            }
+
+            // Только товары в наличии
+            if (!empty($filters['in_stock'])) {
+                $where_conditions[] = 'p.stock_quantity > 0';
+            }
+
+            // Рекомендуемые товары
+            if (!empty($filters['featured'])) {
+                $where_conditions[] = 'p.is_featured = 1';
+            }
+
+            $where_clause = implode(' AND ', $where_conditions);
+
+            // Сортировка
+            $order_by = 'p.created_at DESC'; // Значение по умолчанию
+            if (!empty($filters['sort'])) {
+                switch ($filters['sort']) {
+                    case 'price_asc':
+                        $order_by = 'p.price ASC';
+                        break;
+                    case 'price_desc':
+                        $order_by = 'p.price DESC';
+                        break;
+                    case 'name_asc':
+                        $order_by = 'p.name ASC';
+                        break;
+                    case 'name_desc':
+                        $order_by = 'p.name DESC';
+                        break;
+                    case 'popular':
+                        $order_by = 'p.views_count DESC';
+                        break;
+                    // 'newest' уже учтено как значение по умолчанию $order_by = 'p.created_at DESC';
+                    // если $filters['sort'] === 'newest' можно добавить сюда для явности или оставить как есть
+                    case 'newest':
+                        $order_by = 'p.created_at DESC';
+                        break;
+                }
+            }
+
+            // Пагинация
+            $limit_val = (int)($filters['limit'] ?? 12); // Переименовано во избежание конфликта с ключевым словом
+            $page = max(1, (int)($filters['page'] ?? 1));
+            $offset_val = ($page - 1) * $limit_val; // Переименовано
+
+            $sql = "SELECT p.*, c.name as category_name, c.slug as category_slug,
+                           b.name as brand_name, b.slug as brand_slug
+                    FROM products p
+                    LEFT JOIN categories c ON p.category_id = c.id
+                    LEFT JOIN brands b ON p.brand_id = b.id
+                    WHERE {$where_clause}
+                    ORDER BY {$order_by}
+                    LIMIT ? OFFSET ?"; // ИЗМЕНЕНО: теперь здесь позиционные плейсхолдеры
+
+            $stmt = $this->pdo->prepare($sql); // Это строка, где была ошибка (или следующая за ней при исполнении)
+
+            // Собираем все параметры в один массив для execute()
+            $all_params = $params_for_where; // Сначала параметры для WHERE
+            $all_params[] = $limit_val;      // Затем параметр для LIMIT (уже (int))
+            $all_params[] = $offset_val;     // Затем параметр для OFFSET (уже (int))
+
+            $stmt->execute($all_params); // Передаем массив всех параметров
+
+            return $stmt->fetchAll();
         }
 
-        // Пагинация
-        $limit = (int)($filters['limit'] ?? 12);
-        $page = max(1, (int)($filters['page'] ?? 1)); // Убеждаемся что page минимум 1
-        $offset = ($page - 1) * $limit;
-
-        $sql = "SELECT p.*, c.name as category_name, c.slug as category_slug,
-                       b.name as brand_name, b.slug as brand_slug
-                FROM products p
-                LEFT JOIN categories c ON p.category_id = c.id
-                LEFT JOIN brands b ON p.brand_id = b.id
-                WHERE {$where_clause}
-                ORDER BY {$order_by}
-                LIMIT :limit OFFSET :offset";
-
-        $stmt = $this->pdo->prepare($sql);
-
-        // Привязываем параметры WHERE
-        foreach ($params as $index => $param) {
-            $stmt->bindValue($index + 1, $param);
-        }
-
-        // Привязываем LIMIT и OFFSET как целые числа
-        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
-        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
-
-        $stmt->execute();
-        return $stmt->fetchAll();
-    }
 
     /**
      * Подсчет общего количества товаров с учетом фильтров
