@@ -2,7 +2,7 @@
 // autoparts/config/database.php
 
 // Эти константы лучше определить в constants.php или здесь, если они специфичны для БД
-if (!defined('DB_HOST')) define('DB_HOST', '77.110.122.14'); // Или ваш IP 77.110.122.14, если БД там же
+if (!defined('DB_HOST')) define('DB_HOST', 'localhost'); // Или ваш IP 77.110.122.14, если БД там же
 if (!defined('DB_NAME')) define('DB_NAME', 'danchous'); // Название вашей БД
 if (!defined('DB_USER')) define('DB_USER', 'danchous'); // Пользователь БД
 if (!defined('DB_PASS')) define('DB_PASS', 'danchous'); // Пароль БД

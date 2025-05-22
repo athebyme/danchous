@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: autoparts_app
+    ports:
+      # Пробрасываем порт контейнера (80) на порт сервера.
+      # Чтобы можно было зайти с удаленного компа, используйте IP сервера или 0.0.0.0
+      # Если вы укажете "127.0.0.1:8081:80", доступ будет только с самого сервера.
+      # Для доступа извне:
+      - "8081:80" # Это сделает сайт доступным по http://77.110.122.14:8081
+      # Если хотите стандартный порт 80, и он не занят, можно "80:80"
+    volumes:
+      - .:/var/www/html
+      - ./uploads:/var/www/html/uploads
+    environment:
+      # Подключение к MySQL, который работает на ТОМ ЖЕ ХОСТЕ (сервере 77.110.122.14),
+      # но ВНЕ Docker-контейнера.
+      # Docker-контейнеры имеют свою сеть. Чтобы обратиться к сервису на хост-машине,
+      # можно использовать специальный DNS-имя `host.docker.internal` (для Docker Desktop и новых версий Docker Engine)
+      # или IP-адрес хост-машины во внутренней Docker-сети (обычно 172.17.0.1, если сеть по умолчанию bridge)
+      # или IP-адрес сервера (77.110.122.14), если MySQL слушает этот интерфейс.
+
+      # Вариант 1: Использование `host.docker.internal` (предпочтительно, если поддерживается)
+      DB_HOST: ${DB_HOST:-host.docker.internal}
+
+      # Вариант 2: Использование IP-адреса сервера (надежно, если MySQL слушает внешний IP)
+      # DB_HOST: ${DB_HOST:-77.110.122.14}
+
+      # Вариант 3 (Менее надежно, IP может меняться в зависимости от конфигурации Docker):
+      # Узнать IP хоста в bridge сети Docker: `ip addr show docker0` (на хосте)
+      # DB_HOST: ${DB_HOST:-172.17.0.1} # Замените на актуальный IP вашего docker0 интерфейса
+
+      DB_PORT: ${DB_PORT:-3306}
+      DB_NAME: ${DB_NAME:-autoparts_db}
+      DB_USER: ${DB_USER:-your_mysql_user_for_localhost_or_server_ip} # Пользователь MySQL
+      DB_PASS: ${DB_PASS:-your_mysql_password}                 # Пароль
+      # SITE_URL должен указывать на внешний адрес и порт, по которому вы будете заходить
+      SITE_URL: ${SITE_URL:-http://77.110.122.14:8081} # Если ваш проект в корне
+      # или http://77.110.122.14:8081/autoparts если в подпапке
+    restart: unless-stopped
+    networks:
+      - app_network
+
+networks:
+  app_network:
+    driver: bridge
