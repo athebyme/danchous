@@ -1,31 +1,34 @@
 <?php
 // autoparts/config/database.php
 
-// Эти константы лучше определить в constants.php или здесь, если они специфичны для БД
-if (!defined('DB_HOST')) define('DB_HOST', 'localhost'); // Или ваш IP 77.110.122.14, если БД там же
-if (!defined('DB_NAME')) define('DB_NAME', 'danchous'); // Название вашей БД
-if (!defined('DB_USER')) define('DB_USER', 'danchous'); // Пользователь БД
-if (!defined('DB_PASS')) define('DB_PASS', 'danchous'); // Пароль БД
-if (!defined('DB_CHARSET')) define('DB_CHARSET', 'utf8mb4');
+// Получаем значения из переменных окружения,
+// с фоллбэком на значения по умолчанию, если переменная не установлена.
+// Для Docker Compose переменные окружения БУДУТ установлены.
+$db_host    = getenv('DB_HOST') ?: 'localhost';
+$db_name    = getenv('DB_NAME') ?: 'danchous';
+$db_user    = getenv('DB_USER') ?: 'danchous';
+$db_pass    = getenv('DB_PASS') ?: 'danchous';
+$db_port    = getenv('DB_PORT') ?: '3306'; // Добавим порт
+$db_charset = getenv('DB_CHARSET') ?: 'utf8mb4';
 
-$dsn = "mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=" . DB_CHARSET;
+
+$dsn = "mysql:host=" . $db_host . ";port=" . $db_port . ";dbname=" . $db_name . ";charset=" . $db_charset;
 $options = [
-    PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION, // Выбрасывать исключения при ошибках
-    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,       // Возвращать ассоциативные массивы
-    PDO::ATTR_EMULATE_PREPARES   => false,                  // Использовать настоящие подготовленные выражения
+    PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+    PDO::ATTR_EMULATE_PREPARES   => false,
 ];
 
 try {
-    $pdo = new PDO($dsn, DB_USER, DB_PASS, $options);
+    $pdo = new PDO($dsn, $db_user, $db_pass, $options);
 } catch (\PDOException $e) {
-    // В режиме разработки можно выводить ошибку, в продакшене - логировать и показывать общее сообщение
-    error_log("Database Connection Error: " . $e->getMessage());
-    die("Ошибка подключения к базе данных. Пожалуйста, попробуйте позже.");
-    // throw new \PDOException($e->getMessage(), (int)$e->getCode()); // Можно так, если обрабатывать выше
+    // Для отладки можно вывести больше информации
+    $error_message = "Database Connection Error: " . $e->getMessage() .
+                     " (DSN: " . $dsn . ", User: " . $db_user . ")";
+    error_log($error_message);
+    // В продакшене можно просто die() или показать кастомную страницу ошибки
+    die("Ошибка подключения к базе данных. Пожалуйста, попробуйте позже. Детали в логе сервера.");
 }
 
 // $pdo теперь доступен для использования.
-// Вы можете сделать его глобальным (не рекомендуется для больших проектов)
-// global $pdo;
-// или передавать его в конструкторы классов, или использовать через статический метод класса Database.
 ?>
