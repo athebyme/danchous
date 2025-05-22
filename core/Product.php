@@ -113,7 +113,8 @@ class Product {
 
         // Пагинация
         $limit = $filters['limit'] ?? 12;
-        $offset = ($filters['page'] ?? 1 - 1) * $limit;
+        $page = max(1, $filters['page'] ?? 1); // Убеждаемся что page минимум 1
+        $offset = ($page - 1) * $limit;
 
         $sql = "SELECT p.*, c.name as category_name, c.slug as category_slug,
                        b.name as brand_name, b.slug as brand_slug
@@ -122,10 +123,7 @@ class Product {
                 LEFT JOIN brands b ON p.brand_id = b.id
                 WHERE {$where_clause}
                 ORDER BY {$order_by}
-                LIMIT ? OFFSET ?";
-
-        $params[] = $limit;
-        $params[] = $offset;
+                LIMIT {$limit} OFFSET {$offset}";
 
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute($params);
