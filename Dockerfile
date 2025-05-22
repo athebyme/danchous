@@ -2,7 +2,6 @@
 FROM php:8.1-apache
 
 # Установка необходимых PHP расширений
-# Обновите список расширений в соответствии с потребностями вашего проекта
 RUN apt-get update && apt-get install -y \
         libpng-dev \
         libjpeg-dev \
@@ -17,30 +16,35 @@ RUN apt-get update && apt-get install -y \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install -j$(nproc) gd pdo pdo_mysql mysqli mbstring exif pcntl bcmath zip opcache
 
-# Установка Composer (если он нужен для зависимостей PHP)
-# RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
-
 # Копируем файлы проекта в рабочую директорию контейнера Apache
 COPY . /var/www/html/
 
-# Настройка прав доступа для папки uploads (если она используется)
-# Веб-сервер Apache обычно работает от пользователя www-data
-RUN mkdir -p /var/www/html/uploads && chown -R www-data:www-data /var/www/html/uploads && chmod -R 775 /var/www/html/uploads
+# Создаем и настраиваем права доступа для папок uploads и assets
+RUN mkdir -p /var/www/html/uploads/products && \
+    mkdir -p /var/www/html/uploads/categories && \
+    mkdir -p /var/www/html/uploads/brands && \
+    mkdir -p /var/www/html/assets/images && \
+    chown -R www-data:www-data /var/www/html/uploads && \
+    chown -R www-data:www-data /var/www/html/assets && \
+    chmod -R 775 /var/www/html/uploads && \
+    chmod -R 755 /var/www/html/assets
 
-# Включаем mod_rewrite для ЧПУ (если нужно)
-RUN a2enmod rewrite
+# Включаем mod_rewrite для ЧПУ и .htaccess
+RUN a2enmod rewrite && \
+    a2enmod headers && \
+    a2enmod expires
 
-# (Опционально) Копируем кастомный php.ini, если нужен
-# COPY ./config/php/php.ini /usr/local/etc/php/conf.d/custom.ini
+# Настройка Apache для поддержки .htaccess
+RUN sed -i 's/AllowOverride None/AllowOverride All/g' /etc/apache2/apache2.conf
 
-# (Опционально) Копируем кастомную конфигурацию Apache vhost, если нужна
-# COPY ./config/apache/000-default.conf /etc/apache2/sites-available/000-default.conf
+# Настройка PHP
+RUN echo "upload_max_filesize = 10M" >> /usr/local/etc/php/conf.d/uploads.ini && \
+    echo "post_max_size = 10M" >> /usr/local/etc/php/conf.d/uploads.ini && \
+    echo "memory_limit = 256M" >> /usr/local/etc/php/conf.d/memory.ini && \
+    echo "max_execution_time = 60" >> /usr/local/etc/php/conf.d/execution.ini
 
-# Рабочая директория (для команд вроде `composer install` если вы их запускаете при сборке)
+# Рабочая директория
 WORKDIR /var/www/html
-
-# (Опционально) Если есть composer.json, можно установить зависимости при сборке образа
-# RUN composer install --no-dev --optimize-autoloader
 
 # Apache по умолчанию слушает порт 80 внутри контейнера
 EXPOSE 80

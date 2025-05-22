@@ -7,25 +7,25 @@ services:
       dockerfile: Dockerfile
     container_name: autoparts_app
     ports:
-      - "8080:80"  # Изменил порт, чтобы не конфликтовать с phpMyAdmin
+      - "8082:80"
     volumes:
       - .:/var/www/html
       - ./uploads:/var/www/html/uploads
     environment:
-      # Подключение к существующему MySQL контейнеру
-      DB_HOST: my_mysql_container  # Имя контейнера MySQL
+      # Подключение к внешнему MySQL контейнеру
+      DB_HOST: my_mysql_container
       DB_PORT: 3306
       DB_NAME: danchous
       DB_USER: danchous
       DB_PASS: danchous
-      SITE_URL: http://localhost:8080/autoparts
+      SITE_URL: http://77.110.122.14:8082/autoparts
     restart: unless-stopped
     networks:
       - autoparts_network
     depends_on:
       - mysql_db
 
-  # Подключаем существующую БД к той же сети
+  # Подключаемся к существующему MySQL
   mysql_db:
     image: mysql:8.0
     container_name: my_mysql_container

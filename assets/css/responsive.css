@@ -1,3 +1,5 @@
+/* autoparts/assets/css/responsive.css */
+
 /* Дополнительные адаптивные стили для лучшего отображения на мобильных устройствах */
 
 /* Общие стили для мобильных устройств */
@@ -382,7 +384,6 @@
     .product-card,
     .category-card,
     .btn {
-        -webkit-transform: translateZ(0);
         transform: translateZ(0);
     }
 
